@@ -71,7 +71,8 @@ def build_matrix_M_no_splits(trials, number_of_trials):
 #######################################################################################################
 
 pickle_results = [
-                  "res_2023-01-23__17_07_49_model_KCV_ppo_5m_3H_20005k",
+                  "res_2025-04-14__23_15_13_model_WF_ppo_5m_7H_12k", 
+                    "res_2023-01-23__17_07_49_model_KCV_ppo_5m_3H_20005k",
                   "res_2023-01-23__16_44_30_model_CPCV_ppo_5m_3H_20k"
                   ]
 S = 14
