@@ -51,8 +51,8 @@ class StudyAnalyzer:
 
 if __name__ == "__main__":
     # pickle_result = input("Enter pickle result dir: ")
-    # pickle_result = 'res_2025-04-14__16_43_53_model_CPCV_ppo_5m_7H_12k'
-    pickle_result = 'res_2025-04-14__18_50_04_model_KCV_ppo_5m_7H_12k'
+    pickle_result = 'res_2025-04-14__16_43_53_model_CPCV_ppo_5m_7H_12k'
+    # pickle_result = 'res_2025-04-14__18_50_04_model_KCV_ppo_5m_7H_12k'
 
     study_analyzer = StudyAnalyzer(pickle_result)
     study_analyzer.analyze()
