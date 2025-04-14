@@ -1,8 +1,8 @@
-"""This script is used for training and evaluating a reinforcement learning agent for trading on the Alpaca platform
-using Optuna for hyperparameter optimization and joblib for parallel execution of trials.
+"""This script is used for training and evaluating a reinforcement learning agent for trading on the Alpaca platform.
+The script uses Optuna for hyperparameter optimization, and joblib for parallel execution of trials.
 
 The script imports various modules including joblib, optuna, datetime, pickle, sys, distutils.dir_util,
-environment_Alpaca, function_CPCV, function_train_test, config_main.
+environment_Alpaca, function_CPCV, function_train_test, config_main, and sklearn.model_selection.
 
 The script also contains a class 'bcolors' which is used to color the output text in the terminal.
 
@@ -20,22 +20,30 @@ params are not copied.
 The function 'sample_hyperparams' is used for sampling the hyperparameters for the trials. It returns a dictionary of
 the hyperparameters.
 
-The main function is defined outside of this script, and it sets up the environment, runs the trials, and saves the
-results."""
+The objective function is the function that is being optimized during the trial runs. In this script, the objective
+function is not explicitly defined. It is likely that the objective function is defined within the sample_hyperparams
+or within the functions imported from function_CPCV and function_train_test and it is used to evaluate the
+performance of the agent being trained, such as the profit or return of the agent's trading strategy over a certain
+period of time. The goal of the optimization process is to find the set of hyperparameters that result in the best
+performance of the objective function.
+
+The script also includes a main function which sets up the environment, runs the trials, and saves the results.
+"""
 
 import joblib
 import optuna
 import datetime
 import pickle
 import os
+import sys
 
 from distutils.dir_util import copy_tree
-
-import pandas as pd
-
 from environment_Alpaca import CryptoEnvAlpaca
-from function_train_test import train_and_test
+from function_CPCV import *
+from function_train_test import *
 from config_main import *
+from sklearn.model_selection import KFold, StratifiedKFold
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -55,7 +63,7 @@ def print_config():
     print('TRAIN SAMPLES              ', no_candles_for_train)
     print('TRIALS NO.                 ', H_TRIALS)
     print('N                          ', N_GROUPS)
-    print('K slash ', K_TEST_GROUPS)
+    print('K groups                   ', K_TEST_GROUPS)
     print('SPLITS                     ', NUMBER_OF_SPLITS)
 
     print('\n')
@@ -185,64 +193,76 @@ def objective(trial, name_test, model_name, cwd, res_timestamp, gpu_id):
     # Load data from hard disk
     data_from_processor, price_array, tech_array, time_array = load_saved_data(TIMEFRAME, no_candles_for_train)
 
+    # Set constants
+    env = CryptoEnvAlpaca
+    break_step = erl_params["break_step"]
+    cv = KFold(n_splits=KCV_groups)
+
     # initiate logs for tracking behaviour during training
     path_logs = write_logs(name_folder, model_name, trial, cwd, erl_params, env_params)
 
-    # WF Split function eval (single walk-forward set so no averaging compared to KCV and CPCV
+    # K-fold splits function eval
     #######################################################################################################
     #######################################################################################################
 
-    env = CryptoEnvAlpaca
-    break_step = erl_params['break_step']
-
+    drl_actions_matrix = []
     sharpe_list_bot = []
     sharpe_list_ewq = []
     drl_rets_val_list = []
 
-    # select indices for train
-    train_indices = list(range(1, no_candles_for_train))
-    test_indices = list(range(no_candles_for_train, no_candles_for_train + no_candles_for_val - 1))
+    for split, (train_indices, test_indices) in enumerate(cv.split(price_array)):
+        with open(path_logs, 'a') as f:
+            f.write('TIME START INNER: ' + str(datetime.now()))
+            f.write('K-Fold:           ' + str(split))
 
-    # Train and test
-    sharpe_bot, sharpe_eqw, drl_rets_tmp = train_and_test(trial, price_array, tech_array, train_indices,
-                                                          test_indices, env, model_name, env_params,
-                                                          erl_params, break_step, cwd, gpu_id)
+        sharpe_bot, sharpe_eqw, drl_rets_tmp = train_and_test(trial, price_array, tech_array, train_indices,
+                                                              test_indices, env, model_name, env_params,
+                                                              erl_params, break_step, cwd, gpu_id)
 
-    with open(path_logs, 'a') as f:
-        f.write('BOT:         ' + str(sharpe_bot) + '\n')
-        f.write('HODL:        ' + str(sharpe_eqw) + '\n')
-        f.write('TIME END INNER: ' + str(datetime.now()) + '\n\n')
+        sharpe_list_ewq.append(sharpe_eqw)
+        sharpe_list_bot.append(sharpe_bot)
 
-    # Fill the backtesting prediction matrix
-    drl_rets_val_list.append(drl_rets_tmp)
-    trial.set_user_attr("price_array", price_array)
-    trial.set_user_attr("tech_array", tech_array)
-    trial.set_user_attr("time_array", time_array)
+        with open(path_logs, 'a') as f:
+            f.write('\n' + 'SPLIT: ' + str(split) + '     # Optimizing for Sharpe ratio!' + '\n')
+            f.write('BOT:         ' + str(sharpe_bot) + '\n')
+            f.write('HODL:        ' + str(sharpe_eqw) + '\n')
+            f.write('TIME END INNER: ' + str(datetime.now()) + '\n\n')
+
+        # Fill the backtesting prediction matrix
+        drl_rets_val_list.append(drl_rets_tmp)
+        trial.set_user_attr("price_array", price_array)
+        trial.set_user_attr("tech_array", tech_array)
+        trial.set_user_attr("time_array", time_array)
+
+    # Hyperparameter objective function eval
+    #######################################################################################################
+    #######################################################################################################
 
     # Matrices
+    trial.set_user_attr("drl_actions_matrix", drl_actions_matrix)
     trial.set_user_attr("drl_rets_val_list", drl_rets_val_list)
 
     # Interesting values
-    trial.set_user_attr("sharpe_list_bot", sharpe_bot)
-    trial.set_user_attr("sharpe_list_ewq", sharpe_eqw)
+    trial.set_user_attr("sharpe_list_bot", sharpe_list_bot)
+    trial.set_user_attr("sharpe_list_ewq", sharpe_list_ewq)
 
     with open(path_logs, 'a') as f:
-        f.write('\nHYPERPARAMETER EVAL || SHARPE BOT    :  ' + str(sharpe_bot) + '\n')
-        f.write('HYPERPARAMETER EVAL || SHARPE HODL     : ' + str(sharpe_eqw) + '\n')
-        f.write('DIFFERENCE                                 : ' + str(sharpe_bot - sharpe_eqw) + '\n')
+        f.write('\nHYPERPARAMETER EVAL || SHARPE AVG BOT    :  ' + str(np.mean(sharpe_list_bot)) + '\n')
+        f.write('HYPERPARAMETER EVAL || SHARPE AVG HODL     : ' + str(np.mean(sharpe_list_ewq)) + '\n')
+        f.write('DIFFERENCE                                 : ' + str(
+            np.mean(sharpe_list_bot) - np.mean(sharpe_list_ewq)) + '\n')
         f.write('\n' + 'TIME END OUTER: ' + str(datetime.now()) + '\n')
 
-    return sharpe_bot - sharpe_eqw
+    return np.mean(sharpe_list_bot) - np.mean(sharpe_list_ewq)
 
 
 # Optuna
 #######################################################################################################
 
-
 def optimize(name_test, model_name, gpu_id):
     # Auto naming
     res_timestamp = print_config()
-    name_test = f"{name_test}_WF_{model_name}_{TIMEFRAME}_{H_TRIALS}H_{round((no_candles_for_train + no_candles_for_val) / 1000)}k"
+    name_test = f"{name_test}_KCV_{model_name}_{TIMEFRAME}_{H_TRIALS}H_{round((no_candles_for_train + no_candles_for_val) / 1000)}k"
     cwd = f"./train_results/cwd_tests/{name_test}"
     path = f"./train_results/{res_timestamp}_{name_test}/"
     if not os.path.exists(path):
@@ -253,8 +273,10 @@ def optimize(name_test, model_name, gpu_id):
 
     global study
 
-    def obj_with_argument(trial):
-        return objective(trial, name_test, model_name, cwd, res_timestamp, gpu_id)
+    obj_with_argument = lambda trial: objective(trial, name_test, model_name, cwd, res_timestamp, gpu_id)
+
+    # def obj_with_argument(trial):
+    #     return objective(trial, name_test, model_name, cwd, res_timestamp, gpu_id)
 
     sampler = optuna.samplers.TPESampler(multivariate=True, seed=SEED_CFG)
     study = optuna.create_study(
@@ -282,7 +304,7 @@ gpu_id = 0
 name_model = 'ppo'
 name_test = 'model'
 
-print('\nStarting WF optimization with:')
+print('\nStarting KCV optimization with:')
 print('drl algorithm:       ', name_model)
 print('name_test:           ', name_test)
 print('gpu_id:              ', gpu_id, '\n')
