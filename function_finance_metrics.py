@@ -478,8 +478,8 @@ def sharpe_iid(rtns, bench=0, factor=1, log=True):
       # numpy way
       excess_mean = np.nanmean(excess, axis=0)
       vol = np.nanstd(excess, axis=0, ddof=1)
-
-      if np.isscalar(excess_mean):
+        
+        if np.isscalar(excess_mean):
             # Handle scalar case (single return stream)
             if std_dev is None or np.isclose(std_dev, 0) or not np.isfinite(std_dev):
                 # If std dev is zero or invalid, Sharpe is undefined; return 0
@@ -492,16 +492,16 @@ def sharpe_iid(rtns, bench=0, factor=1, log=True):
             # Initialize sharpe array with a default value (e.g., NaN or 0)
             # Using np.full_like ensures the shape matches excess_mean
             sharpe = np.full_like(excess_mean, 0.0, dtype=float) # Default to 0.0
-
+    
             # Create a mask for valid standard deviations (finite AND not close to zero)
             # This mask will be a boolean array of the same shape as std_dev
             valid_mask = np.isfinite(std_dev) & ~np.isclose(std_dev, 0)
-
+    
             # Calculate Sharpe only for elements where the standard deviation is valid
             # Use the mask to perform element-wise calculation safely
             sharpe[valid_mask] = np.sqrt(factor) * excess_mean[valid_mask] / std_dev[valid_mask]
       
-        return sharpe, vol
+    return sharpe, vol
 """
     else:
         # numpy way
