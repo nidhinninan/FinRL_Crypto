@@ -226,7 +226,7 @@ For both platforms, all dependencies are pre-installed (as specified in the requ
     ([ArXiv Link](https://arxiv.org/pdf/2111.09395))
   
   - *Deep Reinforcement Learning for Cryptocurrency Trading: Practical Approach to Address Backtest Overfitting*
-  - ([ArXiv Link](https://arxiv.org/pdf/2209.05559))
+    ([ArXiv Link](https://arxiv.org/pdf/2209.05559))
   
 - **Documentation and Resources:**  
   - [Official FinRL Documentation](https://finrl.readthedocs.io/)
