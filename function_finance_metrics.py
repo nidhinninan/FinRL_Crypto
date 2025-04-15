@@ -477,6 +477,7 @@ def sharpe_iid(rtns, bench=0, factor=1, log=True):
     else:
       # numpy way
       excess_mean = np.nanmean(excess, axis=0)
+      std_dev = np.nanstd(excess, axis=0, ddof=1) # Result can be scalar or array
       vol = np.nanstd(excess, axis=0, ddof=1)
 
       if np.isscalar(excess_mean):
