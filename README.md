@@ -125,6 +125,22 @@ Each method is set up with:
 - **Dates:** Specific training and validation periods (e.g., 2022-03-17 to 2022-04-29)
 - **Trials:** 7 optuna trials per script
 - **Splitting Strategy:** Defined number of splits and groups
+- **Hyperparameter Search Space (Optuna):** The following ranges were explored during the 7 trials:
+    ```python
+    sampled_erl_params = {
+        "learning_rate": trial.suggest_categorical("learning_rate", [1.5e-2, 7.5e-3]),
+        "batch_size": trial.suggest_categorical("batch_size", [512, 1280]),
+        "gamma": trial.suggest_categorical("gamma", [0.85, 0.99]),
+        "net_dimension": trial.suggest_categorical("net_dimension", [2**9, 2**10]), # i.e., [512, 1024]
+        "target_step": trial.suggest_categorical("target_step",
+                                               [average_episode_step_min,
+                                                round(1.5 * average_episode_step_min),
+                                                2 * average_episode_step_min]),
+        "eval_time_gap": trial.suggest_categorical("eval_time_gap", [60]), # Fixed value
+        "break_step": trial.suggest_categorical("break_step", [3e4, 4.5e4]) # i.e., [30000, 45000]
+    }
+    ```
+    *Note: `average_episode_step_min` depends on the specific validation split length.*
 
 ---
 
@@ -169,6 +185,8 @@ Below is a conceptual example of how one might display the comparative performan
 ```
 
 *Note: Actual charts are available in the repository under the plots_visualisations folder.*
+
+The discrepancy is stark and directly attributable to the **necessary reduction in computational resources and data** for this adapted version. The original paper show that the cpcv method yielded better results in manging overfitting isuues and there is high likelihold that the reason we got kcv as a better results is due to the models overfitting on the given test data and the paper also suggesting that we might need atleast about 50 optuna trials to get a 95% certaining result that the trained models isn't overfitted, which for our training was a meagre 7 trials. In other sample trials that were traing we sometime got better results for cpcv and sometimes of kcv. The discussed results here is the best of the all the trials that were run. The results here **do refute the findings of the original paper** but rather illustrate the challenge of achieving good performance with DRL in finance without sufficient data and computational budget for training and hyperparameter tuning and the discussing issue f crypto based model overfitting.
 
 ---
 
