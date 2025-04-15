@@ -1,5 +1,14 @@
 # FinRL_Crypto – Enhanced Fork for Rapid Experiments in DRL Cryptocurrency Trading
 
+---
+## CS 5720 (CRN:22286) Mini Project
+### Student Information
+- **Name:** Nidhin Ninan
+- **Course:** CS5720 - Neural Networks and Deep Learning
+- **Term:** Spring 2025
+- **University:** University of Central missouri
+---
+
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 This repository is a fork of the original [FinRL_Crypto](https://github.com/AI4Finance-Foundation/FinRL_Crypto) project with important modifications that enable rapid experimentation and free-run demonstration on platforms such as Google Colab and Kaggle Notebook.
