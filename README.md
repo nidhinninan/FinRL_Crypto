@@ -7,6 +7,10 @@
 - **Course:** CS5720 - Neural Networks and Deep Learning
 - **Term:** Spring 2025
 - **University:** University of Central missouri
+
+### Code Implementation Summary Powerpoint: [NNDL_miniPrj-codePresentation](https://ucmo0-my.sharepoint.com/:p:/g/personal/nxn24130_ucmo_edu/Ec0edLLm1TZDmrbqdxFP4HgBR3BgKyfaH7NFe044Ls7KAw?e=sNMfMC)
+### Paper Summary Powerpoint : [PaperSummary_Presentation_NNDL_miniPrj](https://ucmo0-my.sharepoint.com/:p:/g/personal/nxn24130_ucmo_edu/EXiALHDbcJRHrAtMZMeLMv0BdE5HSJQjnlNMefLc47LwXg?e=9V40Fn)
+### Mini-Project Paper Summary : [Summary_Project_NNDL_NNinan](https://ucmo0-my.sharepoint.com/:w:/g/personal/nxn24130_ucmo_edu/EZGlC4Eo171FpJQsepWebxcBF7LM5M34FwmvY56Hdiu9Vg?e=gfc413)
 ---
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
