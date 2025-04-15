@@ -105,7 +105,6 @@ Each optimization script uses Optuna to search over a range of hyperparameters. 
 - `net_dimension`
 - `target_step`
 - Time-gap settings
-- Normalization factors for various signals (cash, stocks, tech, reward, action)
 
 The core modifications include adjustments in the parameter ranges and the reduction of training samples and candle data for faster execution.
 
